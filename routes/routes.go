@@ -9,7 +9,6 @@ import (
 func SetupRoutes() *gin.Engine {
 	r := gin.Default()
 
-	// Rotas de usuários
 	users := r.Group("/users")
 	{
 		users.POST("/", handlers.CreateUser)
@@ -17,6 +16,16 @@ func SetupRoutes() *gin.Engine {
 		users.GET("/:id", handlers.GetUserByID)
 		users.PUT("/:id", handlers.UpdateUser)
 		users.DELETE("/:id", handlers.DeleteUser)
+		users.GET("/:userId/posts", handlers.GetUserPosts) // Posts de um usuário
+	}
+
+	posts := r.Group("/posts")
+	{
+		posts.POST("/", handlers.CreatePost)
+		posts.GET("/", handlers.GetAllPosts)
+		posts.GET("/:id", handlers.GetPostByID)
+		posts.PUT("/:id", handlers.UpdatePost)
+		posts.DELETE("/:id", handlers.DeletePost)
 	}
 
 	return r

@@ -16,6 +16,6 @@ func Init() error {
 		return err
 	}
 
-	// AutoMigrate cria a tabela automaticamente baseada no modelo
-	return DB.AutoMigrate(&models.User{})
+	// AutoMigrate cria as tabelas automaticamente baseadas nos modelos
+	return DB.AutoMigrate(&models.User{}, &models.Post{})
 }
