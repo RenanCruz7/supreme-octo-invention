@@ -25,6 +25,15 @@ func GetUserByID(id uint) (*models.User, error) {
 	return &user, nil
 }
 
+func GetUserByEmail(email string) (*models.User, error) {
+	var user models.User
+	result := db.DB.Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
 func UpdateUser(user models.User) error {
 	return db.DB.Save(&user).Error
 }

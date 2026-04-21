@@ -2,6 +2,7 @@ package routes
 
 import (
 	"awesomeProject/handlers"
+	"awesomeProject/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,23 +10,30 @@ import (
 func SetupRoutes() *gin.Engine {
 	r := gin.Default()
 
+	auth := r.Group("/auth")
+	{
+		auth.POST("/register", handlers.Register)
+		auth.POST("/login", handlers.Login)
+	}
+
 	users := r.Group("/users")
 	{
-		users.POST("/", handlers.CreateUser)
 		users.GET("/", handlers.GetAllUsers)
+		users.GET("/:id/posts", handlers.GetUserPosts)
 		users.GET("/:id", handlers.GetUserByID)
-		users.PUT("/:id", handlers.UpdateUser)
-		users.DELETE("/:id", handlers.DeleteUser)
-		users.GET("/:userId/posts", handlers.GetUserPosts) // Posts de um usuário
+
+		users.PUT("/:id", middleware.RequireAuth(), handlers.UpdateUser)
+		users.DELETE("/:id", middleware.RequireAuth(), handlers.DeleteUser)
 	}
 
 	posts := r.Group("/posts")
 	{
-		posts.POST("/", handlers.CreatePost)
 		posts.GET("/", handlers.GetAllPosts)
 		posts.GET("/:id", handlers.GetPostByID)
-		posts.PUT("/:id", handlers.UpdatePost)
-		posts.DELETE("/:id", handlers.DeletePost)
+
+		posts.POST("/", middleware.RequireAuth(), handlers.CreatePost)
+		posts.PUT("/:id", middleware.RequireAuth(), handlers.UpdatePost)
+		posts.DELETE("/:id", middleware.RequireAuth(), handlers.DeletePost)
 	}
 
 	return r

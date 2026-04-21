@@ -1,0 +1,39 @@
+# Binários
+*.exe
+*.exe~
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Arquivos de teste
+*.test
+*.out
+
+# Dependências (vendor)
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Banco de dados
+*.db
+*.sqlite
+*.sqlite3
+
+# Arquivos de ambiente (não commit da chave secreta)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Arquivos temporários do Go
+go.sum.tmp
+

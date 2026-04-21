@@ -5,30 +5,15 @@ import (
 	"strconv"
 
 	"awesomeProject/models"
-	"awesomeProject/repositories"
+	"awesomeProject/services"
 
 	"github.com/gin-gonic/gin"
 )
 
-func CreateUser(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	id, err := repositories.CreateUser(user)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	user.ID = id
-	c.JSON(http.StatusCreated, user)
-}
+var userService = &services.UserService{}
 
 func GetAllUsers(c *gin.Context) {
-	users, err := repositories.GetAllUsers()
+	users, err := userService.GetAllUsers()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -44,9 +29,9 @@ func GetUserByID(c *gin.Context) {
 		return
 	}
 
-	user, err := repositories.GetUserByID(uint(id))
+	user, err := userService.GetUserByID(uint(id))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -60,15 +45,21 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	userID, exists := c.Get("userID")
+	if !exists || userID.(uint) != uint(id) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "você pode apenas atualizar sua própria conta"})
+		return
+	}
+
+	var req models.User
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	user.ID = uint(id)
-	if err := repositories.UpdateUser(user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	user, err := userService.UpdateUser(uint(id), req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -82,7 +73,14 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	if err := repositories.DeleteUser(uint(id)); err != nil {
+	userID, exists := c.Get("userID")
+	if !exists || userID.(uint) != uint(id) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "você pode apenas deletar sua própria conta"})
+		return
+	}
+
+	err = userService.DeleteUser(uint(id))
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

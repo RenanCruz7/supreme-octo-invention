@@ -1,6 +1,7 @@
 package db
 
 import (
+	"awesomeProject/config"
 	"awesomeProject/models"
 
 	"gorm.io/driver/sqlite"
@@ -11,11 +12,10 @@ var DB *gorm.DB
 
 func Init() error {
 	var err error
-	DB, err = gorm.Open(sqlite.Open("./app.db"), &gorm.Config{})
+	DB, err = gorm.Open(sqlite.Open(config.AppConfig.DatabasePath), &gorm.Config{})
 	if err != nil {
 		return err
 	}
 
-	// AutoMigrate cria as tabelas automaticamente baseadas nos modelos
 	return DB.AutoMigrate(&models.User{}, &models.Post{})
 }
