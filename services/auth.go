@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"awesomeProject/config"
+	"awesomeProject/mappers"
 	"awesomeProject/models"
 	"awesomeProject/repositories"
 
@@ -26,18 +27,12 @@ func (s *AuthService) Register(req models.RegisterRequest) (*models.AuthResponse
 		return nil, fmt.Errorf("email já cadastrado")
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	user, err := mappers.RegisterRequestToUser(req)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao processar senha: %v", err)
 	}
 
-	user := models.User{
-		Name:     req.Name,
-		Email:    req.Email,
-		Password: string(hashedPassword),
-	}
-
-	id, err := repositories.CreateUser(user)
+	id, err := repositories.CreateUser(*user)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar usuário: %v", err)
 	}
