@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+.env.local
+*.log
+*.exe
+*.db
+app.db
+test.exe
+awesomeProject.exe
+.idea
+.vscode
+node_modules
+data/
+
