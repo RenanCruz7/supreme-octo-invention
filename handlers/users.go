@@ -67,7 +67,7 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var req models.User
+	var req models.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		errors.HandleError(c, errors.ErrBadRequestWithErr("erro ao processar usuário", err))
 		return

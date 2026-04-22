@@ -34,7 +34,7 @@ func (s *UserService) GetUserByID(id uint) (*models.User, error) {
 	return user, nil
 }
 
-func (s *UserService) UpdateUser(id uint, req models.User) (*models.User, error) {
+func (s *UserService) UpdateUser(id uint, req models.UpdateUserRequest) (*models.User, error) {
 	if id == 0 {
 		return nil, errors.ErrBadRequest("ID inválido")
 	}
@@ -44,15 +44,15 @@ func (s *UserService) UpdateUser(id uint, req models.User) (*models.User, error)
 		return nil, errors.ErrNotFound("usuário não encontrado")
 	}
 
-	if req.Name != "" {
-		existingUser.Name = req.Name
+	if req.Name != nil && *req.Name != "" {
+		existingUser.Name = *req.Name
 	}
-	if req.Email != "" && req.Email != existingUser.Email {
-		emailExists, _ := repositories.GetUserByEmail(req.Email)
+	if req.Email != nil && *req.Email != "" && *req.Email != existingUser.Email {
+		emailExists, _ := repositories.GetUserByEmail(*req.Email)
 		if emailExists != nil {
 			return nil, errors.ErrConflict("email já cadastrado")
 		}
-		existingUser.Email = req.Email
+		existingUser.Email = *req.Email
 	}
 
 	err = repositories.UpdateUser(*existingUser)
