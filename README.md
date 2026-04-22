@@ -1,58 +1,65 @@
 # Awesome Project - API REST com Autenticação JWT
 
-## 🚀 Melhorias Implementadas
+Uma API REST modular e segura construída em Go com autenticação JWT, arquitetura em camadas e banco de dados SQLite.
 
-### 1. **Arquitetura em Camadas (Handler > Service > Repository)**
-- ✅ **Handlers**: Responsáveis apenas por HTTP (parse request, response HTTP)
+## ✨ Funcionalidades Implementadas
+
+### 1. **Arquitetura em Camadas**
+- ✅ **Handlers**: Responsáveis apenas por HTTP (parse de requisições e respostas)
 - ✅ **Services**: Contêm toda a lógica de negócio e validações
-- ✅ **Repositories**: Abstração da camada de dados (GORM/Banco de Dados)
+- ✅ **Repositories**: Abstração da camada de dados (GORM/SQLite)
+- ✅ **Middleware**: Autenticação e logging estruturado
 
-**Benefícios:**
-- Código mais testável
-- Melhor separação de responsabilidades
-- Lógica de negócio reutilizável
-- Fácil manutenção
+### 2. **Sistema de Autenticação JWT**
+- ✅ Registro de novos usuários com validação
+- ✅ Login e geração de token JWT (válido por 24h)
+- ✅ Hash de senhas com bcrypt
+- ✅ Middleware de autenticação para rotas protegidas
 
-### 2. **Autenticação com JWT**
-- ✅ **Register/Login**: Endpoints públicos para registro e autenticação
-- ✅ **Token JWT**: Gerado ao fazer login ou registro (válido por 24h)
-- ✅ **Middleware de Autenticação**: Valida token em requisições protegidas
-- ✅ **Hash de Senhas**: Senhas armazenadas com bcrypt (DefaultCost)
+### 3. **Gerenciamento de Usuários**
+- ✅ Listar todos os usuários (público)
+- ✅ Buscar usuário por ID (público)
+- ✅ Atualizar próprio perfil (protegido)
+- ✅ Deletar própria conta (protegido)
 
-**Fluxo:**
-1. Usuário se registra em `POST /auth/register`
-2. Usuário faz login em `POST /auth/login` e recebe um token
-3. Usuário inclui token no header `Authorization: Bearer <token>` em requisições protegidas
+### 4. **Sistema de Posts**
+- ✅ Criar posts (protegido)
+- ✅ Listar todos os posts (público)
+- ✅ Buscar post por ID (público)
+- ✅ Listar posts de um usuário específico (público)
+- ✅ Atualizar próprio post (protegido)
+- ✅ Deletar próprio post (protegido)
 
-### 3. **Autorização (Ownership)**
-- ✅ Usuários só podem **editar sua própria conta**
-- ✅ Usuários só podem **deletar sua própria conta**
-- ✅ Usuários só podem **editar seus próprios posts**
-- ✅ Usuários só podem **deletar seus próprios posts**
+### 5. **Autorização por Ownership**
+- ✅ Usuários só podem editar sua própria conta
+- ✅ Usuários só podem deletar sua própria conta
+- ✅ Usuários só podem editar seus próprios posts
+- ✅ Usuários só podem deletar seus próprios posts
 
-### 4. **Variáveis de Ambiente com Godotenv**
-- ✅ Arquivo `.env` centralizado
-- ✅ Configurações: `DATABASE_PATH`, `PORT`, `JWT_SECRET`
-- ✅ Suporte a valores padrão
-
-**Arquivo .env:**
-```
-DATABASE_PATH=./app.db
-PORT=8080
-JWT_SECRET=sua_chave_secreta_muito_segura_aqui_123456
-```
-
-### 5. **Validações Melhoradas**
-- ✅ Título de post: mínimo 3 caracteres
-- ✅ Corpo de post: mínimo 10 caracteres
+### 6. **Validações**
+- ✅ Email: validação de formato obrigatória
 - ✅ Senha: mínimo 6 caracteres
-- ✅ Email: validação de formato
+- ✅ Nome: mínimo 3 caracteres
 - ✅ Verificação de email duplicado no registro
 
-### 6. **Timestamps**
-- ✅ Campo `CreatedAt` em Users e Posts
-- ✅ Campo `UpdatedAt` em Users e Posts
-- ✅ Gerenciados automaticamente pelo GORM
+### 7. **Configuração com Variáveis de Ambiente**
+- ✅ Arquivo `.env` centralizado
+- ✅ Variáveis: `DATABASE_PATH`, `PORT`, `JWT_SECRET`
+- ✅ Suporte a valores padrão
+
+### 8. **Banco de Dados**
+- ✅ SQLite com GORM ORM
+- ✅ Migrations automáticas
+- ✅ Timestamps automáticos (CreatedAt, UpdatedAt)
+
+### 9. **Tratamento de Erros**
+- ✅ Respostas de erro estruturadas e consistentes
+- ✅ Códigos de erro customizados
+- ✅ Mensagens de erro informativas
+
+### 10. **Logging Estruturado**
+- ✅ Middleware de logging em todas as requisições
+- ✅ Rastreamento de informações de requisição e resposta
 
 ## 📁 Estrutura do Projeto
 
@@ -60,30 +67,38 @@ JWT_SECRET=sua_chave_secreta_muito_segura_aqui_123456
 awesomeProject/
 ├── config/
 │   └── config.go              # Gerenciamento de variáveis de ambiente
-├── handlers/
-│   ├── auth.go               # Endpoints de autenticação
-│   ├── users.go              # Endpoints de usuários (refatorado)
-│   └── posts.go              # Endpoints de posts (refatorado)
-├── services/
-│   ├── auth.go               # Lógica de autenticação e JWT
-│   ├── users.go              # Lógica de negócio de usuários
-│   └── posts.go              # Lógica de negócio de posts
-├── repositories/
-│   ├── users.go              # Acesso a dados de usuários
-│   └── posts.go              # Acesso a dados de posts
-├── models/
-│   ├── users.go              # Model User
-│   ├── posts.go              # Model Post
-│   └── auth.go               # Models de autenticação
-├── middleware/
-│   └── auth.go               # Middleware de validação de JWT
-├── routes/
-│   └── routes.go             # Definição de rotas
 ├── db/
-│   └── db.go                 # Inicialização do banco de dados
-├── main.go                   # Ponto de entrada da aplicação
-├── .env                      # Variáveis de ambiente
-└── go.mod                    # Dependências do projeto
+│   └── db.go                  # Inicialização do banco de dados
+├── errors/
+│   ├── errors.go              # Definição de erros customizados
+│   └── handler.go             # Tratamento centralizado de erros
+├── handlers/
+│   ├── auth.go                # Endpoints de autenticação
+│   ├── users.go               # Endpoints de usuários
+│   └── posts.go               # Endpoints de posts
+├── mappers/
+│   └── user.go                # Mapeamento de dados de usuário
+├── middleware/
+│   └── auth.go                # Validação de JWT e logging
+├── models/
+│   ├── auth.go                # Models de autenticação
+│   ├── users.go               # Model User
+│   └── posts.go               # Model Post
+├── repositories/
+│   ├── users.go               # Acesso a dados de usuários
+│   └── posts.go               # Acesso a dados de posts
+├── routes/
+│   └── routes.go              # Definição de rotas
+├── services/
+│   ├── auth.go                # Lógica de autenticação
+│   ├── users.go               # Lógica de negócio de usuários
+│   └── posts.go               # Lógica de negócio de posts
+├── data/                      # Dados do banco de dados
+├── main.go                    # Ponto de entrada da aplicação
+├── docker-compose.yml         # Composição de serviços Docker
+├── Dockerfile                 # Imagem Docker
+├── .env                       # Variáveis de ambiente
+└── go.mod                     # Dependências do projeto
 ```
 
 ## 🔐 Endpoints da API
@@ -251,33 +266,37 @@ curl http://localhost:8080/posts
 curl http://localhost:8080/users/1/posts
 ```
 
-## 📦 Dependências Adicionadas
+## 📦 Dependências
 
-```bash
-go get github.com/golang-jwt/jwt/v5
-go get golang.org/x/crypto
-go get github.com/joho/godotenv
 ```
-
-- **golang-jwt/jwt/v5**: Geração e validação de tokens JWT
-- **crypto**: Hash de senhas com bcrypt
-- **godotenv**: Carregamento de variáveis de ambiente do arquivo .env
+github.com/gin-gonic/gin v1.10.0           - Framework HTTP
+github.com/golang-jwt/jwt/v5 v5.3.1        - Geração e validação de JWT
+golang.org/x/crypto v0.50.0                - Hash de senhas com bcrypt
+github.com/joho/godotenv v1.5.1            - Carregamento de .env
+gorm.io/driver/sqlite v1.6.0               - Driver SQLite para GORM
+gorm.io/gorm v1.31.1                       - ORM para banco de dados
+```
 
 ## ⚙️ Configuração
 
-### Variavelies de Ambiente (.env)
+### Variáveis de Ambiente (.env)
 ```env
 # Caminho do banco de dados SQLite
 DATABASE_PATH=./app.db
 
 # Porta do servidor
-PORT=8080
+PORT=:8080
 
 # Chave secreta para assinar tokens JWT (use uma chave forte em produção!)
 JWT_SECRET=sua_chave_secreta_muito_segura_aqui_123456
+
+# Driver do banco de dados
+DB_DRIVER=sqlite
 ```
 
 ## 🚀 Como Executar
+
+### Localmente (sem Docker)
 
 1. **Clone/Prepare o projeto**
    ```bash
@@ -287,92 +306,89 @@ JWT_SECRET=sua_chave_secreta_muito_segura_aqui_123456
 2. **Configure o arquivo .env**
    ```bash
    # Já foi criado com valores padrão
-   # Edite se necessário
+   # Edite conforme necessário
    ```
 
-3. **Compile o projeto**
+3. **Download de dependências**
+   ```bash
+   go mod download
+   ```
+
+4. **Compile o projeto**
    ```bash
    go build -o awesomeProject.exe
    ```
 
-4. **Execute**
+5. **Execute**
    ```bash
    ./awesomeProject.exe
    ```
 
-5. **Servidor iniciará em**
+6. **Servidor iniciará em**
    ```
    http://localhost:8080
    ```
 
+### Com Docker
+
+```bash
+docker-compose up --build
+```
+
+O servidor iniciará em `http://localhost:8080`
+
 ## 🔄 Fluxo de Autenticação
 
 ```
-┌─────────────────┐
-│   Usuário       │
-└────────┬────────┘
-         │
-         │ 1. POST /auth/register ou /auth/login
-         ↓
-┌─────────────────────────────────┐
-│  Auth Handler & Service          │
-│  - Valida credenciais            │
-│  - Hash de senha (bcrypt)        │
-│  - Gera JWT Token               │
-└────────┬────────────────────────┘
-         │
-         │ 2. Retorna Token
-         ↓
-┌─────────────────┐
-│   Usuário       │
-│ Armazena Token  │
-└────────┬────────┘
-         │
-         │ 3. Inclui token em requisições
-         │    Authorization: Bearer <token>
-         ↓
-┌──────────────────────────────┐
-│  Middleware RequireAuth()     │
-│  - Valida assinatura         │
-│  - Verifica expiração        │
-│  - Extrai userID             │
-└──────────┬───────────────────┘
-           │
-           │ ✅ Token válido
-           ↓
-┌──────────────────────┐
-│  Handler & Service   │
-│  Processa requisição │
-└──────────────────────┘
+1. Usuário faz POST /auth/register ou /auth/login
+   ↓
+2. Auth Service valida credenciais
+   - Valida formato de email
+   - Verifica senha mínima (6 caracteres)
+   - Hash da senha com bcrypt
+   ↓
+3. JWT Token é gerado
+   - Válido por 24 horas
+   ↓
+4. Usuário recebe token e o armazena
+   ↓
+5. Usuário inclui token em requisições protegidas
+   - Header: Authorization: Bearer <token>
+   ↓
+6. Middleware RequireAuth() valida o token
+   - Verifica assinatura
+   - Valida expiração
+   - Extrai ID do usuário
+   ↓
+7. Se válido, requisição é processada
+   Se inválido, erro 401 Unauthorized
 ```
 
-## 🧪 Testes Recomendados
+## 🧪 Testando a API
 
-Use ferramentas como **Postman**, **Insomnia** ou **cURL** para testar:
+Use ferramentas como **Postman**, **Insomnia** ou **cURL**:
 
 1. ✅ Registrar novo usuário
-2. ✅ Fazer login
-3. ✅ Criar post sem autenticação (deve falhar)
-4. ✅ Criar post com token inválido (deve falhar)
+2. ✅ Fazer login e obter token
+3. ✅ Listar posts públicos (sem autenticação)
+4. ✅ Tentar criar post sem token (deve falhar com 401)
 5. ✅ Criar post com token válido (deve funcionar)
-6. ✅ Listar posts públicos
-7. ✅ Tentar atualizar post de outro usuário (deve falhar)
+6. ✅ Listar posts do usuário
+7. ✅ Tentar atualizar post de outro usuário (deve falhar com 403)
 8. ✅ Atualizar próprio post (deve funcionar)
+9. ✅ Deletar próprio post
 
-## 🎯 Próximas Melhorias Opcionais
+## 📝 Próximas Melhorias Opcionais
 
-- [ ] Refresh tokens (token expira em 24h, refresh token em 7 dias)
+- [ ] Refresh tokens para melhor segurança
 - [ ] Rate limiting por IP/usuário
 - [ ] Paginação em listagens
 - [ ] Soft delete (marcar como deletado ao invés de remover)
-- [ ] Logs estruturados com zerolog ou logrus
 - [ ] Testes unitários e de integração
-- [ ] Docker e docker-compose
-- [ ] CI/CD com GitHub Actions
 - [ ] Documentação OpenAPI/Swagger
 - [ ] Cache com Redis
+- [ ] CI/CD com GitHub Actions
 
 ---
 
-**Projeto refatorado e pronto para produção! 🎉**
-
+**Projeto desenvolvido com Go, Gin, JWT e GORM 🚀**
