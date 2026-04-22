@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"net/http"
 	"strings"
 
+	"awesomeProject/errors"
 	"awesomeProject/services"
 
 	"github.com/gin-gonic/gin"
@@ -15,14 +15,14 @@ func RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "token não fornecido"})
+			errors.HandleError(c, errors.ErrUnauthorized("token não fornecido"))
 			c.Abort()
 			return
 		}
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "formato de token inválido"})
+			errors.HandleError(c, errors.ErrUnauthorized("formato de token inválido"))
 			c.Abort()
 			return
 		}
@@ -31,7 +31,7 @@ func RequireAuth() gin.HandlerFunc {
 
 		claims, err := authService.ValidateToken(tokenString)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "token inválido"})
+			errors.HandleError(c, err)
 			c.Abort()
 			return
 		}

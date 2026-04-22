@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"awesomeProject/errors"
 	"awesomeProject/models"
 	"awesomeProject/services"
 
@@ -14,13 +15,13 @@ var authService = &services.AuthService{}
 func Register(c *gin.Context) {
 	var req models.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errors.HandleError(c, errors.ErrBadRequestWithErr("erro ao processar registro", err))
 		return
 	}
 
 	resp, err := authService.Register(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errors.HandleError(c, err)
 		return
 	}
 
@@ -30,13 +31,13 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errors.HandleError(c, errors.ErrBadRequestWithErr("erro ao processar login", err))
 		return
 	}
 
 	resp, err := authService.Login(req)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		errors.HandleError(c, err)
 		return
 	}
 

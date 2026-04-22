@@ -1,10 +1,10 @@
 package services
 
 import (
-	"fmt"
 	"time"
 
 	"awesomeProject/config"
+	"awesomeProject/errors"
 	"awesomeProject/mappers"
 	"awesomeProject/models"
 	"awesomeProject/repositories"
@@ -24,24 +24,24 @@ type Claims struct {
 func (s *AuthService) Register(req models.RegisterRequest) (*models.AuthResponse, error) {
 	existingUser, _ := repositories.GetUserByEmail(req.Email)
 	if existingUser != nil {
-		return nil, fmt.Errorf("email já cadastrado")
+		return nil, errors.ErrConflict("email já cadastrado")
 	}
 
 	user, err := mappers.RegisterRequestToUser(req)
 	if err != nil {
-		return nil, fmt.Errorf("erro ao processar senha: %v", err)
+		return nil, errors.ErrBadRequestWithErr("erro ao processar senha", err)
 	}
 
 	id, err := repositories.CreateUser(*user)
 	if err != nil {
-		return nil, fmt.Errorf("erro ao criar usuário: %v", err)
+		return nil, errors.ErrInternalWithErr("erro ao criar usuário", err)
 	}
 
 	user.ID = id
 
 	token, err := s.GenerateToken(user.ID, user.Email)
 	if err != nil {
-		return nil, fmt.Errorf("erro ao gerar token: %v", err)
+		return nil, errors.ErrInternalWithErr("erro ao gerar token", err)
 	}
 
 	return &models.AuthResponse{
@@ -55,17 +55,17 @@ func (s *AuthService) Register(req models.RegisterRequest) (*models.AuthResponse
 func (s *AuthService) Login(req models.LoginRequest) (*models.AuthResponse, error) {
 	user, err := repositories.GetUserByEmail(req.Email)
 	if err != nil || user == nil {
-		return nil, fmt.Errorf("email ou senha inválidos")
+		return nil, errors.ErrUnauthorized("email ou senha inválidos")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil {
-		return nil, fmt.Errorf("email ou senha inválidos")
+		return nil, errors.ErrUnauthorized("email ou senha inválidos")
 	}
 
 	token, err := s.GenerateToken(user.ID, user.Email)
 	if err != nil {
-		return nil, fmt.Errorf("erro ao gerar token: %v", err)
+		return nil, errors.ErrInternalWithErr("erro ao gerar token", err)
 	}
 
 	return &models.AuthResponse{
@@ -89,7 +89,7 @@ func (s *AuthService) GenerateToken(userID uint, email string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(config.AppConfig.JWTSecret))
 	if err != nil {
-		return "", err
+		return "", errors.ErrInternalWithErr("erro ao gerar token", err)
 	}
 
 	return tokenString, nil
@@ -99,17 +99,17 @@ func (s *AuthService) ValidateToken(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("método de assinatura inválido")
+			return nil, errors.ErrUnauthorized("método de assinatura inválido")
 		}
 		return []byte(config.AppConfig.JWTSecret), nil
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("erro ao validar token: %v", err)
+		return nil, errors.ErrUnauthorizedWithErr("erro ao validar token", err)
 	}
 
 	if !token.Valid {
-		return nil, fmt.Errorf("token inválido")
+		return nil, errors.ErrUnauthorized("token inválido")
 	}
 
 	return claims, nil

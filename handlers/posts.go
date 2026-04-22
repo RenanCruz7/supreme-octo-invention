@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"awesomeProject/errors"
 	"awesomeProject/models"
 	"awesomeProject/services"
 
@@ -15,19 +16,19 @@ var postService = &services.PostService{}
 func CreatePost(c *gin.Context) {
 	var post models.Post
 	if err := c.ShouldBindJSON(&post); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errors.HandleError(c, errors.ErrBadRequestWithErr("erro ao processar post", err))
 		return
 	}
 
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "usuário não autenticado"})
+		errors.HandleError(c, errors.ErrUnauthorized("usuário não autenticado"))
 		return
 	}
 
 	createdPost, err := postService.CreatePost(post, userID.(uint))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errors.HandleError(c, err)
 		return
 	}
 
@@ -37,7 +38,7 @@ func CreatePost(c *gin.Context) {
 func GetAllPosts(c *gin.Context) {
 	posts, err := postService.GetAllPosts()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errors.HandleError(c, err)
 		return
 	}
 
@@ -47,13 +48,13 @@ func GetAllPosts(c *gin.Context) {
 func GetPostByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID inválido"})
+		errors.HandleError(c, errors.ErrBadRequest("ID inválido"))
 		return
 	}
 
 	post, err := postService.GetPostByID(uint(id))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Post não encontrado"})
+		errors.HandleError(c, err)
 		return
 	}
 
@@ -63,13 +64,13 @@ func GetPostByID(c *gin.Context) {
 func GetUserPosts(c *gin.Context) {
 	userID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID inválido"})
+		errors.HandleError(c, errors.ErrBadRequest("User ID inválido"))
 		return
 	}
 
 	posts, err := postService.GetUserPosts(uint(userID))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		errors.HandleError(c, err)
 		return
 	}
 
@@ -79,29 +80,25 @@ func GetUserPosts(c *gin.Context) {
 func UpdatePost(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID inválido"})
+		errors.HandleError(c, errors.ErrBadRequest("ID inválido"))
 		return
 	}
 
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "usuário não autenticado"})
+		errors.HandleError(c, errors.ErrUnauthorized("usuário não autenticado"))
 		return
 	}
 
 	var post models.Post
 	if err := c.ShouldBindJSON(&post); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errors.HandleError(c, errors.ErrBadRequestWithErr("erro ao processar post", err))
 		return
 	}
 
 	updatedPost, err := postService.UpdatePost(uint(id), post, userID.(uint))
 	if err != nil {
-		if err.Error() == "você não tem permissão para atualizar este post" {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		}
+		errors.HandleError(c, err)
 		return
 	}
 
@@ -111,23 +108,19 @@ func UpdatePost(c *gin.Context) {
 func DeletePost(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID inválido"})
+		errors.HandleError(c, errors.ErrBadRequest("ID inválido"))
 		return
 	}
 
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "usuário não autenticado"})
+		errors.HandleError(c, errors.ErrUnauthorized("usuário não autenticado"))
 		return
 	}
 
 	err = postService.DeletePost(uint(id), userID.(uint))
 	if err != nil {
-		if err.Error() == "você não tem permissão para deletar este post" {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		}
+		errors.HandleError(c, err)
 		return
 	}
 
