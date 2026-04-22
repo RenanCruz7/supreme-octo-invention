@@ -8,7 +8,10 @@ import (
 )
 
 func SetupRoutes() *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
+
+	// Add structured logging middleware
+	r.Use(middleware.StructuredLogging())
 
 	auth := r.Group("/auth")
 	{
