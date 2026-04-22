@@ -10,9 +10,10 @@ func CreateUser(user models.User) (uint, error) {
 	return user.ID, result.Error
 }
 
-func GetAllUsers() ([]models.User, error) {
+func GetAllUsers(page, limit int) ([]models.User, error) {
 	var users []models.User
-	result := db.DB.Find(&users)
+	offset := (page - 1) * limit
+	result := db.DB.Offset(offset).Limit(limit).Find(&users)
 	return users, result.Error
 }
 

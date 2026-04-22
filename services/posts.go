@@ -28,8 +28,14 @@ func (s *PostService) CreatePost(post models.Post, userID uint) (*models.Post, e
 	return &post, nil
 }
 
-func (s *PostService) GetAllPosts() ([]models.Post, error) {
-	posts, err := repositories.GetAllPosts()
+func (s *PostService) GetAllPosts(page, limit int) ([]models.Post, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	posts, err := repositories.GetAllPosts(page, limit)
 	if err != nil {
 		return nil, errors.ErrInternalWithErr("erro ao buscar posts", err)
 	}
@@ -48,9 +54,15 @@ func (s *PostService) GetPostByID(id uint) (*models.Post, error) {
 	return post, nil
 }
 
-func (s *PostService) GetUserPosts(userID uint) ([]models.Post, error) {
+func (s *PostService) GetUserPosts(userID uint, page, limit int) ([]models.Post, error) {
 	if userID == 0 {
 		return nil, errors.ErrBadRequest("ID de usuário inválido")
+	}
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
 	}
 
 	user, err := repositories.GetUserByID(userID)
@@ -58,7 +70,7 @@ func (s *PostService) GetUserPosts(userID uint) ([]models.Post, error) {
 		return nil, errors.ErrNotFound("usuário não encontrado")
 	}
 
-	posts, err := repositories.GetPostsByUserID(userID)
+	posts, err := repositories.GetPostsByUserID(userID, page, limit)
 	if err != nil {
 		return nil, errors.ErrInternalWithErr("erro ao buscar posts", err)
 	}

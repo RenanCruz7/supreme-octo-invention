@@ -8,8 +8,14 @@ import (
 
 type UserService struct{}
 
-func (s *UserService) GetAllUsers() ([]models.User, error) {
-	users, err := repositories.GetAllUsers()
+func (s *UserService) GetAllUsers(page, limit int) ([]models.User, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	users, err := repositories.GetAllUsers(page, limit)
 	if err != nil {
 		return nil, errors.ErrInternalWithErr("erro ao buscar usuários", err)
 	}

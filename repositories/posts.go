@@ -10,9 +10,10 @@ func CreatePost(post models.Post) (uint, error) {
 	return post.ID, result.Error
 }
 
-func GetAllPosts() ([]models.Post, error) {
+func GetAllPosts(page, limit int) ([]models.Post, error) {
 	var posts []models.Post
-	result := db.DB.Preload("User").Find(&posts)
+	offset := (page - 1) * limit
+	result := db.DB.Preload("User").Offset(offset).Limit(limit).Find(&posts)
 	return posts, result.Error
 }
 
@@ -25,9 +26,10 @@ func GetPostByID(id uint) (*models.Post, error) {
 	return &post, nil
 }
 
-func GetPostsByUserID(userID uint) ([]models.Post, error) {
+func GetPostsByUserID(userID uint, page, limit int) ([]models.Post, error) {
 	var posts []models.Post
-	result := db.DB.Preload("User").Where("user_id = ?", userID).Find(&posts)
+	offset := (page - 1) * limit
+	result := db.DB.Preload("User").Where("user_id = ?", userID).Offset(offset).Limit(limit).Find(&posts)
 	return posts, result.Error
 }
 

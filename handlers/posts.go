@@ -36,7 +36,22 @@ func CreatePost(c *gin.Context) {
 }
 
 func GetAllPosts(c *gin.Context) {
-	posts, err := postService.GetAllPosts()
+	page := 1
+	limit := 10
+
+	if p := c.Query("page"); p != "" {
+		if parsedPage, err := strconv.Atoi(p); err == nil && parsedPage > 0 {
+			page = parsedPage
+		}
+	}
+
+	if l := c.Query("limit"); l != "" {
+		if parsedLimit, err := strconv.Atoi(l); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
+	posts, err := postService.GetAllPosts(page, limit)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -68,7 +83,22 @@ func GetUserPosts(c *gin.Context) {
 		return
 	}
 
-	posts, err := postService.GetUserPosts(uint(userID))
+	page := 1
+	limit := 10
+
+	if p := c.Query("page"); p != "" {
+		if parsedPage, err := strconv.Atoi(p); err == nil && parsedPage > 0 {
+			page = parsedPage
+		}
+	}
+
+	if l := c.Query("limit"); l != "" {
+		if parsedLimit, err := strconv.Atoi(l); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
+	posts, err := postService.GetUserPosts(uint(userID), page, limit)
 	if err != nil {
 		errors.HandleError(c, err)
 		return

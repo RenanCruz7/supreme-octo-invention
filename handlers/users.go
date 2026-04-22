@@ -14,7 +14,22 @@ import (
 var userService = &services.UserService{}
 
 func GetAllUsers(c *gin.Context) {
-	users, err := userService.GetAllUsers()
+	page := 1
+	limit := 10
+
+	if p := c.Query("page"); p != "" {
+		if parsedPage, err := strconv.Atoi(p); err == nil && parsedPage > 0 {
+			page = parsedPage
+		}
+	}
+
+	if l := c.Query("limit"); l != "" {
+		if parsedLimit, err := strconv.Atoi(l); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
+	users, err := userService.GetAllUsers(page, limit)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
