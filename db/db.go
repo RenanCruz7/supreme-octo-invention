@@ -35,7 +35,7 @@ func Init() error {
 	}
 
 	// Auto migrate
-	if err := DB.AutoMigrate(&models.User{}, &models.Post{}); err != nil {
+	if err := DB.AutoMigrate(&models.User{}, &models.Post{}, &models.RefreshToken{}); err != nil {
 		return fmt.Errorf("erro ao executar migrations: %w", err)
 	}
 

@@ -10,13 +10,17 @@ import (
 func SetupRoutes() *gin.Engine {
 	r := gin.New()
 
-	// Add structured logging middleware
+	// Middlewares globais
 	r.Use(middleware.StructuredLogging())
+	r.Use(middleware.RateLimiter())
 
 	auth := r.Group("/auth")
+	auth.Use(middleware.StrictRateLimiter())
 	{
 		auth.POST("/register", handlers.Register)
 		auth.POST("/login", handlers.Login)
+		auth.POST("/refresh", handlers.Refresh)
+		auth.POST("/logout", middleware.RequireAuth(), handlers.Logout)
 	}
 
 	users := r.Group("/users")
