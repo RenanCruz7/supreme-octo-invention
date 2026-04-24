@@ -11,41 +11,34 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var userService = &services.UserService{}
+type UserHandler struct {
+	svc services.IUserService
+}
 
-func GetAllUsers(c *gin.Context) {
-	page := 1
-	limit := 10
+func NewUserHandler(svc services.IUserService) *UserHandler {
+	return &UserHandler{svc: svc}
+}
 
-	if p := c.Query("page"); p != "" {
-		if parsedPage, err := strconv.Atoi(p); err == nil && parsedPage > 0 {
-			page = parsedPage
-		}
-	}
+func (h *UserHandler) GetAllUsers(c *gin.Context) {
+	page, limit := parsePagination(c)
 
-	if l := c.Query("limit"); l != "" {
-		if parsedLimit, err := strconv.Atoi(l); err == nil && parsedLimit > 0 {
-			limit = parsedLimit
-		}
-	}
-
-	users, err := userService.GetAllUsers(page, limit)
+	result, err := h.svc.GetAllUsers(page, limit)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, users)
+	c.JSON(http.StatusOK, result)
 }
 
-func GetUserByID(c *gin.Context) {
+func (h *UserHandler) GetUserByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		errors.HandleError(c, errors.ErrBadRequest("ID inválido"))
 		return
 	}
 
-	user, err := userService.GetUserByID(uint(id))
+	user, err := h.svc.GetUserByID(uint(id))
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -54,7 +47,7 @@ func GetUserByID(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func UpdateUser(c *gin.Context) {
+func (h *UserHandler) UpdateUser(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		errors.HandleError(c, errors.ErrBadRequest("ID inválido"))
@@ -73,7 +66,7 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := userService.UpdateUser(uint(id), req)
+	user, err := h.svc.UpdateUser(uint(id), req)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -82,7 +75,7 @@ func UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func DeleteUser(c *gin.Context) {
+func (h *UserHandler) DeleteUser(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		errors.HandleError(c, errors.ErrBadRequest("ID inválido"))
@@ -95,7 +88,7 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	err = userService.DeleteUser(uint(id))
+	err = h.svc.DeleteUser(uint(id))
 	if err != nil {
 		errors.HandleError(c, err)
 		return

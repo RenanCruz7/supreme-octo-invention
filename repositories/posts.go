@@ -10,6 +10,12 @@ func CreatePost(post models.Post) (uint, error) {
 	return post.ID, result.Error
 }
 
+func CountAllPosts() (int, error) {
+	var count int64
+	result := db.DB.Model(&models.Post{}).Count(&count)
+	return int(count), result.Error
+}
+
 func GetAllPosts(page, limit int) ([]models.Post, error) {
 	var posts []models.Post
 	offset := (page - 1) * limit
@@ -24,6 +30,12 @@ func GetPostByID(id uint) (*models.Post, error) {
 		return nil, result.Error
 	}
 	return &post, nil
+}
+
+func CountPostsByUserID(userID uint) (int, error) {
+	var count int64
+	result := db.DB.Model(&models.Post{}).Where("user_id = ?", userID).Count(&count)
+	return int(count), result.Error
 }
 
 func GetPostsByUserID(userID uint, page, limit int) ([]models.Post, error) {

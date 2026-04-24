@@ -6,20 +6,27 @@ import (
 	"awesomeProject/repositories"
 )
 
-type PostService struct{}
+type PostService struct {
+	UserRepo repositories.IUserRepository
+	PostRepo repositories.IPostRepository
+}
+
+func NewPostService(userRepo repositories.IUserRepository, postRepo repositories.IPostRepository) *PostService {
+	return &PostService{UserRepo: userRepo, PostRepo: postRepo}
+}
 
 func (s *PostService) CreatePost(post models.Post, userID uint) (*models.Post, error) {
 	if userID == 0 {
 		return nil, errors.ErrUnauthorized("usuário não autenticado")
 	}
 
-	user, err := repositories.GetUserByID(userID)
+	user, err := s.UserRepo.GetUserByID(userID)
 	if err != nil || user == nil {
 		return nil, errors.ErrNotFound("usuário não encontrado")
 	}
 
 	post.UserID = userID
-	id, err := repositories.CreatePost(post)
+	id, err := s.PostRepo.CreatePost(post)
 	if err != nil {
 		return nil, errors.ErrInternalWithErr("erro ao criar post", err)
 	}
@@ -28,18 +35,23 @@ func (s *PostService) CreatePost(post models.Post, userID uint) (*models.Post, e
 	return &post, nil
 }
 
-func (s *PostService) GetAllPosts(page, limit int) ([]models.Post, error) {
+func (s *PostService) GetAllPosts(page, limit int) (*models.PaginatedResponse[models.Post], error) {
 	if page < 1 {
 		page = 1
 	}
-	if limit < 1 {
+	if limit < 1 || limit > 100 {
 		limit = 10
 	}
-	posts, err := repositories.GetAllPosts(page, limit)
+	posts, err := s.PostRepo.GetAllPosts(page, limit)
 	if err != nil {
 		return nil, errors.ErrInternalWithErr("erro ao buscar posts", err)
 	}
-	return posts, nil
+	total, err := s.PostRepo.CountAllPosts()
+	if err != nil {
+		return nil, errors.ErrInternalWithErr("erro ao contar posts", err)
+	}
+	resp := models.NewPaginatedResponse(posts, page, limit, total)
+	return &resp, nil
 }
 
 func (s *PostService) GetPostByID(id uint) (*models.Post, error) {
@@ -47,34 +59,39 @@ func (s *PostService) GetPostByID(id uint) (*models.Post, error) {
 		return nil, errors.ErrBadRequest("ID inválido")
 	}
 
-	post, err := repositories.GetPostByID(id)
+	post, err := s.PostRepo.GetPostByID(id)
 	if err != nil || post == nil {
 		return nil, errors.ErrNotFound("post não encontrado")
 	}
 	return post, nil
 }
 
-func (s *PostService) GetUserPosts(userID uint, page, limit int) ([]models.Post, error) {
+func (s *PostService) GetUserPosts(userID uint, page, limit int) (*models.PaginatedResponse[models.Post], error) {
 	if userID == 0 {
 		return nil, errors.ErrBadRequest("ID de usuário inválido")
 	}
 	if page < 1 {
 		page = 1
 	}
-	if limit < 1 {
+	if limit < 1 || limit > 100 {
 		limit = 10
 	}
 
-	user, err := repositories.GetUserByID(userID)
+	user, err := s.UserRepo.GetUserByID(userID)
 	if err != nil || user == nil {
 		return nil, errors.ErrNotFound("usuário não encontrado")
 	}
 
-	posts, err := repositories.GetPostsByUserID(userID, page, limit)
+	posts, err := s.PostRepo.GetPostsByUserID(userID, page, limit)
 	if err != nil {
 		return nil, errors.ErrInternalWithErr("erro ao buscar posts", err)
 	}
-	return posts, nil
+	total, err := s.PostRepo.CountPostsByUserID(userID)
+	if err != nil {
+		return nil, errors.ErrInternalWithErr("erro ao contar posts", err)
+	}
+	resp := models.NewPaginatedResponse(posts, page, limit, total)
+	return &resp, nil
 }
 
 func (s *PostService) UpdatePost(id uint, post models.Post, userID uint) (*models.Post, error) {
@@ -82,7 +99,7 @@ func (s *PostService) UpdatePost(id uint, post models.Post, userID uint) (*model
 		return nil, errors.ErrBadRequest("ID inválido")
 	}
 
-	existingPost, err := repositories.GetPostByID(id)
+	existingPost, err := s.PostRepo.GetPostByID(id)
 	if err != nil || existingPost == nil {
 		return nil, errors.ErrNotFound("post não encontrado")
 	}
@@ -98,7 +115,7 @@ func (s *PostService) UpdatePost(id uint, post models.Post, userID uint) (*model
 		existingPost.Body = post.Body
 	}
 
-	err = repositories.UpdatePost(*existingPost)
+	err = s.PostRepo.UpdatePost(*existingPost)
 	if err != nil {
 		return nil, errors.ErrInternalWithErr("erro ao atualizar post", err)
 	}
@@ -111,7 +128,7 @@ func (s *PostService) DeletePost(id uint, userID uint) error {
 		return errors.ErrBadRequest("ID inválido")
 	}
 
-	post, err := repositories.GetPostByID(id)
+	post, err := s.PostRepo.GetPostByID(id)
 	if err != nil || post == nil {
 		return errors.ErrNotFound("post não encontrado")
 	}
@@ -120,7 +137,7 @@ func (s *PostService) DeletePost(id uint, userID uint) error {
 		return errors.ErrForbidden("você não tem permissão para deletar este post")
 	}
 
-	err = repositories.DeletePost(id)
+	err = s.PostRepo.DeletePost(id)
 	if err != nil {
 		return errors.ErrInternalWithErr("erro ao deletar post", err)
 	}

@@ -11,9 +11,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var postService = &services.PostService{}
+type PostHandler struct {
+	svc services.IPostService
+}
 
-func CreatePost(c *gin.Context) {
+func NewPostHandler(svc services.IPostService) *PostHandler {
+	return &PostHandler{svc: svc}
+}
+
+func (h *PostHandler) CreatePost(c *gin.Context) {
 	var post models.Post
 	if err := c.ShouldBindJSON(&post); err != nil {
 		errors.HandleError(c, errors.ErrBadRequestWithErr("erro ao processar post", err))
@@ -26,7 +32,7 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
-	createdPost, err := postService.CreatePost(post, userID.(uint))
+	createdPost, err := h.svc.CreatePost(post, userID.(uint))
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -35,39 +41,26 @@ func CreatePost(c *gin.Context) {
 	c.JSON(http.StatusCreated, createdPost)
 }
 
-func GetAllPosts(c *gin.Context) {
-	page := 1
-	limit := 10
+func (h *PostHandler) GetAllPosts(c *gin.Context) {
+	page, limit := parsePagination(c)
 
-	if p := c.Query("page"); p != "" {
-		if parsedPage, err := strconv.Atoi(p); err == nil && parsedPage > 0 {
-			page = parsedPage
-		}
-	}
-
-	if l := c.Query("limit"); l != "" {
-		if parsedLimit, err := strconv.Atoi(l); err == nil && parsedLimit > 0 {
-			limit = parsedLimit
-		}
-	}
-
-	posts, err := postService.GetAllPosts(page, limit)
+	result, err := h.svc.GetAllPosts(page, limit)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, posts)
+	c.JSON(http.StatusOK, result)
 }
 
-func GetPostByID(c *gin.Context) {
+func (h *PostHandler) GetPostByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		errors.HandleError(c, errors.ErrBadRequest("ID inválido"))
 		return
 	}
 
-	post, err := postService.GetPostByID(uint(id))
+	post, err := h.svc.GetPostByID(uint(id))
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -76,38 +69,25 @@ func GetPostByID(c *gin.Context) {
 	c.JSON(http.StatusOK, post)
 }
 
-func GetUserPosts(c *gin.Context) {
+func (h *PostHandler) GetUserPosts(c *gin.Context) {
 	userID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		errors.HandleError(c, errors.ErrBadRequest("User ID inválido"))
 		return
 	}
 
-	page := 1
-	limit := 10
+	page, limit := parsePagination(c)
 
-	if p := c.Query("page"); p != "" {
-		if parsedPage, err := strconv.Atoi(p); err == nil && parsedPage > 0 {
-			page = parsedPage
-		}
-	}
-
-	if l := c.Query("limit"); l != "" {
-		if parsedLimit, err := strconv.Atoi(l); err == nil && parsedLimit > 0 {
-			limit = parsedLimit
-		}
-	}
-
-	posts, err := postService.GetUserPosts(uint(userID), page, limit)
+	result, err := h.svc.GetUserPosts(uint(userID), page, limit)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, posts)
+	c.JSON(http.StatusOK, result)
 }
 
-func UpdatePost(c *gin.Context) {
+func (h *PostHandler) UpdatePost(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		errors.HandleError(c, errors.ErrBadRequest("ID inválido"))
@@ -126,7 +106,7 @@ func UpdatePost(c *gin.Context) {
 		return
 	}
 
-	updatedPost, err := postService.UpdatePost(uint(id), post, userID.(uint))
+	updatedPost, err := h.svc.UpdatePost(uint(id), post, userID.(uint))
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -135,7 +115,7 @@ func UpdatePost(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedPost)
 }
 
-func DeletePost(c *gin.Context) {
+func (h *PostHandler) DeletePost(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		errors.HandleError(c, errors.ErrBadRequest("ID inválido"))
@@ -148,7 +128,7 @@ func DeletePost(c *gin.Context) {
 		return
 	}
 
-	err = postService.DeletePost(uint(id), userID.(uint))
+	err = h.svc.DeletePost(uint(id), userID.(uint))
 	if err != nil {
 		errors.HandleError(c, err)
 		return

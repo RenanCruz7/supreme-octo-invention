@@ -10,6 +10,12 @@ func CreateUser(user models.User) (uint, error) {
 	return user.ID, result.Error
 }
 
+func CountAllUsers() (int, error) {
+	var count int64
+	result := db.DB.Model(&models.User{}).Count(&count)
+	return int(count), result.Error
+}
+
 func GetAllUsers(page, limit int) ([]models.User, error) {
 	var users []models.User
 	offset := (page - 1) * limit

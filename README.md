@@ -148,7 +148,18 @@ Response: 200 OK
 
 #### Listar todos (Público)
 ```bash
-GET /users
+GET /users?page=1&limit=10
+```
+
+Response:
+```json
+{
+  "data": [...],
+  "page": 1,
+  "limit": 10,
+  "total": 42,
+  "total_pages": 5
+}
 ```
 
 #### Buscar por ID (Público)
@@ -178,7 +189,18 @@ Authorization: Bearer <token>
 
 #### Listar todos (Público)
 ```bash
-GET /posts
+GET /posts?page=1&limit=10
+```
+
+Response:
+```json
+{
+  "data": [...],
+  "page": 1,
+  "limit": 10,
+  "total": 100,
+  "total_pages": 10
+}
 ```
 
 #### Buscar por ID (Público)
@@ -188,7 +210,7 @@ GET /posts/:id
 
 #### Posts de um usuário (Público)
 ```bash
-GET /users/:userId/posts
+GET /users/:userId/posts?page=1&limit=10
 ```
 
 #### Criar post (Protegido)
@@ -380,14 +402,8 @@ Use ferramentas como **Postman**, **Insomnia** ou **cURL**:
 
 ## 📝 Próximas Melhorias Opcionais
 
-- [ ] Refresh tokens para melhor segurança
-- [ ] Rate limiting por IP/usuário
-- [ ] Paginação em listagens
-- [ ] Soft delete (marcar como deletado ao invés de remover)
 - [ ] Testes unitários e de integração
 - [ ] Documentação OpenAPI/Swagger
-- [ ] Cache com Redis
-- [ ] CI/CD com GitHub Actions
 
 ---
 

@@ -13,9 +13,14 @@ import (
 	"github.com/google/uuid"
 )
 
-var authService = &services.AuthService{}
+// TokenValidator is implemented by any service capable of validating JWT tokens.
+type TokenValidator interface {
+	ValidateToken(tokenString string) (*services.Claims, error)
+}
 
-func RequireAuth() gin.HandlerFunc {
+// RequireAuthWithValidator creates an auth middleware using the provided TokenValidator.
+// Prefer this over RequireAuth for better testability.
+func RequireAuthWithValidator(v TokenValidator) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -31,9 +36,7 @@ func RequireAuth() gin.HandlerFunc {
 			return
 		}
 
-		tokenString := parts[1]
-
-		claims, err := authService.ValidateToken(tokenString)
+		claims, err := v.ValidateToken(parts[1])
 		if err != nil {
 			errors.HandleError(c, err)
 			c.Abort()
@@ -42,9 +45,14 @@ func RequireAuth() gin.HandlerFunc {
 
 		c.Set("userID", claims.UserID)
 		c.Set("email", claims.Email)
-
 		c.Next()
 	}
+}
+
+// RequireAuth creates auth middleware with a default AuthService (nil repos are safe
+// because ValidateToken only reads config.AppConfig.JWTSecret).
+func RequireAuth() gin.HandlerFunc {
+	return RequireAuthWithValidator(&services.AuthService{})
 }
 
 // StructuredLogging middleware provides structured logging with request ID, timestamp, and level

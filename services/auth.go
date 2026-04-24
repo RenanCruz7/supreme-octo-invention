@@ -14,7 +14,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthService struct{}
+type AuthService struct {
+	UserRepo  repositories.IUserRepository
+	TokenRepo repositories.IRefreshTokenRepository
+}
+
+func NewAuthService(userRepo repositories.IUserRepository, tokenRepo repositories.IRefreshTokenRepository) *AuthService {
+	return &AuthService{UserRepo: userRepo, TokenRepo: tokenRepo}
+}
 
 type Claims struct {
 	UserID uint   `json:"user_id"`
@@ -23,7 +30,7 @@ type Claims struct {
 }
 
 func (s *AuthService) Register(req models.RegisterRequest) (*models.AuthResponse, error) {
-	existingUser, _ := repositories.GetUserByEmail(req.Email)
+	existingUser, _ := s.UserRepo.GetUserByEmail(req.Email)
 	if existingUser != nil {
 		return nil, errors.ErrConflict("email já cadastrado")
 	}
@@ -33,7 +40,7 @@ func (s *AuthService) Register(req models.RegisterRequest) (*models.AuthResponse
 		return nil, errors.ErrBadRequestWithErr("erro ao processar senha", err)
 	}
 
-	id, err := repositories.CreateUser(*user)
+	id, err := s.UserRepo.CreateUser(*user)
 	if err != nil {
 		return nil, errors.ErrInternalWithErr("erro ao criar usuário", err)
 	}
@@ -60,7 +67,7 @@ func (s *AuthService) Register(req models.RegisterRequest) (*models.AuthResponse
 }
 
 func (s *AuthService) Login(req models.LoginRequest) (*models.AuthResponse, error) {
-	user, err := repositories.GetUserByEmail(req.Email)
+	user, err := s.UserRepo.GetUserByEmail(req.Email)
 	if err != nil || user == nil {
 		return nil, errors.ErrUnauthorized("email ou senha inválidos")
 	}
@@ -120,7 +127,7 @@ func (s *AuthService) GenerateRefreshToken(userID uint) (string, error) {
 		Revoked:   false,
 	}
 
-	if err := repositories.CreateRefreshToken(rt); err != nil {
+	if err := s.TokenRepo.CreateRefreshToken(rt); err != nil {
 		return "", errors.ErrInternalWithErr("erro ao salvar refresh token", err)
 	}
 
@@ -129,17 +136,17 @@ func (s *AuthService) GenerateRefreshToken(userID uint) (string, error) {
 
 // RefreshTokens valida o refresh token, revoga o antigo (rotação) e emite novo par
 func (s *AuthService) RefreshTokens(refreshTokenStr string) (*models.AuthResponse, error) {
-	rt, err := repositories.GetRefreshToken(refreshTokenStr)
+	rt, err := s.TokenRepo.GetRefreshToken(refreshTokenStr)
 	if err != nil {
 		return nil, errors.ErrUnauthorized("refresh token inválido ou expirado")
 	}
 
 	// Rotação: revoga o token atual antes de emitir novo
-	if err := repositories.RevokeRefreshToken(refreshTokenStr); err != nil {
+	if err := s.TokenRepo.RevokeRefreshToken(refreshTokenStr); err != nil {
 		return nil, errors.ErrInternalWithErr("erro ao revogar token", err)
 	}
 
-	user, err := repositories.GetUserByID(rt.UserID)
+	user, err := s.UserRepo.GetUserByID(rt.UserID)
 	if err != nil || user == nil {
 		return nil, errors.ErrUnauthorized("usuário não encontrado")
 	}
@@ -165,7 +172,7 @@ func (s *AuthService) RefreshTokens(refreshTokenStr string) (*models.AuthRespons
 
 // Logout revoga todos os refresh tokens ativos do usuário
 func (s *AuthService) Logout(userID uint) error {
-	return repositories.RevokeAllUserTokens(userID)
+	return s.TokenRepo.RevokeAllUserTokens(userID)
 }
 
 func (s *AuthService) ValidateToken(tokenString string) (*Claims, error) {
