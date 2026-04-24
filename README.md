@@ -400,11 +400,6 @@ Use ferramentas como **Postman**, **Insomnia** ou **cURL**:
 8. ✅ Atualizar próprio post (deve funcionar)
 9. ✅ Deletar próprio post
 
-## 📝 Próximas Melhorias Opcionais
-
-- [ ] Testes unitários e de integração
-- [ ] Documentação OpenAPI/Swagger
-
 ---
 
 **Projeto desenvolvido com Go, Gin, JWT e GORM 🚀**
